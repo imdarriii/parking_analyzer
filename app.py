@@ -41,6 +41,7 @@ class ParkingSystem:
         for i in range(num_spots):
             x_left = x_start + i * (spot_size + 6)
 
+
             center = (num_spots - 1) / 2.0
             distance_from_center = abs(i - center)
             vertical_offset = 0.2 * (distance_from_center ** 2)
