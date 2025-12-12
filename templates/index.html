@@ -1,485 +1,1357 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🅿️ Parking Analyzer</title>
+    <title>SmartParkAI</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        * {
             margin: 0;
-            background-color: #f4f7f6;
-            color: #333;
-        }
-
-        .login-page {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background: linear-gradient(135deg, #007bff 0%, #00d4ff 100%);
-        }
-
-        .login-box {
-            background: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            text-align: center;
-            width: 300px;
-        }
-
-        .login-box h1 {
-            color: #007bff;
-            margin: 0 0 10px 0;
-            font-size: 2.5em;
-        }
-
-        .login-box h2 {
-            color: #007bff;
-            margin: 0 0 5px 0;
-            font-size: 1.8em;
-        }
-
-        .login-box .subtitle {
-            color: #666;
-            margin-bottom: 25px;
-            font-size: 1.1em;
-        }
-
-        .login-box input {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0 20px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            padding: 0;
             box-sizing: border-box;
-            font-size: 1em;
         }
 
-        .login-box button {
-            background-color: #28a745;
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1.1em;
-            transition: background-color 0.3s;
-            width: 100%;
-        }
 
-        .login-box button:hover {
-            background-color: #218838;
-        }
-
-        .error-message {
-            color: #dc3545;
-            margin-top: 15px;
-            font-weight: bold;
-        }
-
-        .main-page {
-            display: none;
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 20px;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: auto;
+
+        .phone-frame {
+            width: 100%;
+            max-width: 400px;
+            height: 800px;
+            background: #000;
+            border-radius: 60px;
+            padding: 16px;
+            box-shadow: 0 50px 100px rgba(0,0,0,0.5);
+            position: relative;
         }
 
-        .header {
+
+        .phone-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 160px;
+            height: 28px;
+            background: #000;
+            border-radius: 0 0 24px 24px;
+            z-index: 20;
+        }
+
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 45px;
+            overflow: hidden;
+            position: relative;
+        }
+
+
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #ddd;
-            margin-bottom: 20px;
+            justify-content: center;
+            padding: 40px 30px;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
 
-        .header h1 {
-            margin: 0;
-            color: #007bff;
-            font-size: 1.8em;
+
+        .screen.active {
+            opacity: 1;
+            transform: translateX(0);
         }
 
-        .user-info {
-            font-size: 1em;
-            font-weight: bold;
-            color: #555;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+
+        .screen.exit {
+            transform: translateX(-100%);
+            opacity: 0;
         }
 
-        .logout-btn {
-            background: #dc3545;
+
+        .welcome-icon {
+            font-size: 80px;
+            margin-bottom: 30px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+
+        h1 {
             color: white;
+            font-size: 32px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 15px;
+            line-height: 1.3;
+        }
+
+
+        p {
+            color: rgba(255,255,255,0.8);
+            font-size: 16px;
+            text-align: center;
+            margin-bottom: 40px;
+            line-height: 1.5;
+        }
+
+
+        button {
+            background: white;
+            color: #667eea;
             border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
+            padding: 16px 48px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.3s;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: all 0.3s;
         }
 
-        .logout-btn:hover {
-            background: #c82333;
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
         }
 
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+
+        .input-container {
+            width: 100%;
+            max-width: 320px;
             margin-bottom: 30px;
         }
 
-        .stat-box {
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+
+        input {
+            width: 100%;
+            padding: 16px 24px;
+            border-radius: 25px;
+            border: none;
+            background: rgba(255,255,255,0.9);
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
         }
 
-        .stat-box.free {
-            background-color: #d4edda;
-            color: #155724;
+
+        input:focus {
+            box-shadow: 0 0 0 4px rgba(255,255,255,0.3);
         }
 
-        .stat-box.occupied {
-            background-color: #f8d7da;
-            color: #721c24;
+
+        .user-icon {
+            width: 100px;
+            height: 100px;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            margin-bottom: 30px;
         }
 
-        .stat-box .label {
-            font-size: 1em;
+
+        .features {
+            width: 100%;
+            max-width: 320px;
+            margin-bottom: 30px;
+        }
+
+
+        .feature-item {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 25px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            animation: slideIn 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+
+        .feature-item:nth-child(1) { animation-delay: 0.6s; }
+        .feature-item:nth-child(2) { animation-delay: 0.7s; }
+        .feature-item:nth-child(3) { animation-delay: 0.8s; }
+
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+
+        .feature-text {
+            color: white;
+            font-size: 15px;
+        }
+
+
+        .location-cards {
+            width: 100%;
+            max-width: 320px;
+        }
+
+
+        .location-card {
+            background: rgba(255,255,255,0.9);
+            border-radius: 30px;
+            padding: 24px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+
+        .location-card:hover {
+            transform: scale(1.02);
+        }
+
+
+        .location-card.selected {
+            box-shadow: 0 0 0 4px white;
+            background: linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1));
+        }
+
+
+        .location-emoji {
+            font-size: 40px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 12px;
+            border-radius: 20px;
+        }
+
+
+        .location-info {
+            flex: 1;
+        }
+
+
+        .location-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+
+        .location-desc {
+            font-size: 14px;
+            color: #666;
+        }
+
+
+        .dashboard {
+            background: #f5f5f5;
+            padding: 0;
+        }
+
+
+        .dashboard-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 0 0 40px 40px;
+            padding: 30px 24px 40px;
+            color: white;
+        }
+
+
+        .greeting {
+            font-size: 14px;
+            opacity: 0.8;
             margin-bottom: 5px;
         }
 
-        .stat-box .value {
-            font-size: 2.2em;
-            font-weight: bold;
+
+        .location-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
         }
 
-        .content {
+
+        .stats-grid {
             display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 30px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
         }
 
-        .section-title {
-            font-size: 1.4em;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 15px;
-            padding-bottom: 5px;
-            border-bottom: 2px solid #007bff;
+
+        .stat-card {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 16px;
+            text-align: center;
         }
 
-        .camera-section {
-            background: #fff;
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+
+        .dashboard-content {
+            padding: 24px;
+            height: calc(100% - 280px);
+            overflow-y: auto;
+        }
+
+
+        .camera-card {
+            background: white;
+            border-radius: 30px;
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
 
-        #cameraContainer {
-            min-height: 450px;
-            background: #000;
+
+        .camera-header {
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+
+        .camera-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+
+        .live-badge {
+            background: #ef4444;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+
+        .camera-feed {
+            background: linear-gradient(135deg, #1f2937, #111827);
+            border-radius: 20px;
             overflow: hidden;
+            position: relative;
+            min-height: 200px;
         }
 
-        .camera-placeholder {
-            color: #fff;
-            font-size: 1.2em;
-        }
 
-        .camera-frame {
+        .camera-feed img {
             width: 100%;
             height: auto;
             display: block;
         }
 
-        .spots-section {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            max-height: 600px;
-            overflow-y: auto;
-        }
 
-        .spots-grid {
+        .camera-placeholder {
+            min-height: 200px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            padding-top: 10px;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.5);
         }
 
-        .spot-button {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid;
-            border-radius: 8px;
-            text-align: left;
-            font-size: 0.95em;
-            font-weight: bold;
-            cursor: default;
-            transition: all 0.3s;
+
+        .parking-grid-card {
+            background: white;
+            border-radius: 30px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+
+        .parking-grid-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 15px;
         }
 
-        .spot-button.free {
-            background-color: #e6ffe6;
-            border-color: #27ae60;
-            color: #27ae60;
+
+        .parking-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            margin-bottom: 15px;
         }
 
-        .spot-button.occupied {
-            background-color: #ffe6e6;
-            border-color: #e74c3c;
-            color: #e74c3c;
-        }
 
-        .spot-status {
+        .parking-spot {
+            aspect-ratio: 1;
+            border-radius: 12px;
             display: flex;
             align-items: center;
-            font-size: 0.85em;
+            justify-content: center;
+            font-size: 20px;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+
+        .parking-spot:hover {
+            transform: scale(1.1);
+        }
+
+
+        .parking-spot.free {
+            background: linear-gradient(135deg, #34d399, #10b981);
+        }
+
+
+        .parking-spot.occupied {
+            background: linear-gradient(135deg, #f87171, #ef4444);
+        }
+
+
+        .spot-number {
+            position: absolute;
+            bottom: 2px;
+            font-size: 8px;
             font-weight: bold;
+            color: white;
         }
 
-        .status-indicator {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-right: 6px;
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e5e5;
         }
 
-        .update-info {
-            text-align: right;
-            font-size: 0.8em;
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+
+        .legend-color.free {
+            background: linear-gradient(135deg, #34d399, #10b981);
+        }
+
+
+        .legend-color.occupied {
+            background: linear-gradient(135deg, #f87171, #ef4444);
+        }
+
+
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 40px 40px 0 0;
+            padding: 20px;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-around;
+            z-index: 10;
+        }
+
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
             color: #999;
+            transition: color 0.3s;
+        }
+
+
+        .nav-item.active {
+            color: #667eea;
+        }
+
+
+        .nav-icon {
+            font-size: 24px;
+        }
+
+
+        .nav-label {
+            font-size: 12px;
+        }
+
+
+        .error-badge {
+            background: rgba(251, 191, 36, 0.9);
+            color: #92400e;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-top: 4px;
+            display: inline-block;
+        }
+
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+
+        .hidden {
+            display: none !important;
+        }
+
+
+        .parking-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #666;
             margin-top: 10px;
+        }
+
+
+        /* Profile Page Styles */
+        .profile-content {
+            padding: 24px;
+            padding-bottom: 100px;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            background: #d1d5db;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            margin: 30px auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+
+        .profile-name {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+
+        .profile-email {
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+
+        .profile-card {
+            background: white;
+            border-radius: 30px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+
+        .profile-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+
+        .profile-item:last-child {
+            border-bottom: none;
+        }
+
+
+        .profile-item-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+
+        .profile-item-info {
+            flex: 1;
+        }
+
+
+        .profile-item-label {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 4px;
+        }
+
+
+        .profile-item-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+
+        .logout-button {
+            width: 100%;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            padding: 18px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.3);
+            transition: all 0.3s;
+        }
+
+
+        .logout-button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 40px rgba(239, 68, 68, 0.4);
+        }
+
+
+        /* Map Page Styles */
+        .map-content {
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+
+
+        .map-header {
+            background: white;
+            padding: 20px 24px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+
+        .map-header-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+
+
+        .map-container {
+            width: 100%;
+            height: calc(100% - 140px);
+            position: relative;
+        }
+
+
+        .map-container img {
+            width: 100%;
+            height: 100%;
+            border: none;
+            object-fit: cover;
+            display: block;
+        }
+
+
+        .map-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 5;
+        }
+
+
+        .map-control-btn {
+            width: 48px;
+            height: 48px;
+            background: white;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: all 0.3s;
+        }
+
+
+        .map-control-btn:hover {
+            transform: scale(1.1);
         }
     </style>
 </head>
 <body>
-    <div id="loginPage" class="login-page">
-        <div class="login-box">
-            <h1>🅿️</h1>
-            <h2>Parking Analyzer</h2>
-            <p class="subtitle">Статус парковок</p>
-            <input type="text" id="username" placeholder="Введите ваше имя" onkeypress="if(event.key==='Enter') login()">
-            <button onclick="login()">Продолжить</button>
-            <div id="loginError" class="error-message"></div>
+<div class="phone-frame">
+    <div class="phone-notch"></div>
+    <div class="phone-screen">
+
+
+        <!-- Screen 1: Welcome -->
+        <div class="screen active" id="welcome-screen">
+            <div class="welcome-icon">🚗</div>
+            <h1>Welcome to<br>SmartParkAI</h1>
+            <p>Your AI assistant for finding<br>free parking spots</p>
+            <button onclick="nextScreen(1)">Continue</button>
         </div>
-    </div>
 
-    <div id="mainPage" class="main-page">
-        <div class="container">
-            <div class="header">
-                <h1>🅿️ Площадь Ала-Тоо: Статус парковки</h1>
-                <div class="user-info">
-                    Привет, <span id="userDisplay">Guest</span>!
-                    <button class="logout-btn" onclick="logout()">Выход</button>
+
+        <!-- Screen 2: Enter Name -->
+        <div class="screen" id="name-screen">
+            <div class="user-icon">👤</div>
+            <h1>Enter your name</h1>
+            <p>Let's personalize your experience</p>
+            <div class="input-container">
+                <input type="text" id="username-input" placeholder="Your Name" />
+            </div>
+            <button onclick="submitName()">Next →</button>
+        </div>
+
+
+        <!-- Screen 3: Description -->
+        <div class="screen" id="description-screen">
+            <h1 style="margin-bottom: 30px;">SmartParkAI</h1>
+            <p style="margin-bottom: 40px;">This AI-powered tool helps you quickly find free parking spaces and save your time.</p>
+            <div class="features">
+                <div class="feature-item">
+                    <div class="feature-icon">📍</div>
+                    <div class="feature-text">Find parking spots instantly</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">⏱️</div>
+                    <div class="feature-text">Save your precious time</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">⚡</div>
+                    <div class="feature-text">AI-powered predictions</div>
                 </div>
             </div>
+            <button onclick="nextScreen(3)">Continue</button>
+        </div>
 
-            <div class="stats" id="stats">
-                <div class="stat-box free">
-                    <div class="label">Свободные места</div>
-                    <div class="value"><span id="freeCount">0</span> / <span id="totalCount">33</span></div>
-                </div>
-                <div class="stat-box occupied">
-                    <div class="label">Занятость (Загрузка)</div>
-                    <div class="value" id="occupancyDisplay">0%</div>
-                </div>
-            </div>
 
-            <div class="content">
-                <div class="camera-section">
-                    <div class="section-title">📹 Трансляция с камеры</div>
-                    <div id="cameraContainer">
-                        <div class="camera-placeholder">Ожидание первого кадра...</div>
-                    </div>
-                    <div class="update-info">
-                        Последнее обновление: <span id="lastUpdateDisplay">Нет данных</span>
+        <!-- Screen 4: Select Location -->
+        <div class="screen" id="location-screen">
+            <h1>Choose Parking Zone</h1>
+            <p>Select your preferred location</p>
+            <div class="location-cards">
+                <div class="location-card" onclick="selectLocation(event, 'Ala-Too Square')">
+                    <div class="location-emoji">🏛️</div>
+                    <div class="location-info">
+                        <div class="location-name">Ala-Too Square</div>
+                        <div class="location-desc">35 parking spots</div>
                     </div>
                 </div>
-
-                <div class="spots-section">
-                    <div class="section-title">🚗 Места парковки (33)</div>
-                    <div class="spots-grid" id="spotsGrid">
-                        <div style="text-align: center; color: #999;">Загрузка статуса...</div>
+                <div class="location-card" onclick="selectLocation(event, 'Technopark')">
+                    <div class="location-emoji">🏢</div>
+                    <div class="location-info">
+                        <div class="location-name">Technopark</div>
+                        <div class="location-desc">35 parking spots</div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <script>
-        const API_URL = 'http://localhost:5000/api';
-        let currentUser = '';
-        let isRunning = true;
-        let intervalId = null;
 
-        async function login() {
-            const username = document.getElementById('username').value.trim();
-            
-            if (username.length < 2) {
-                showError('Имя должно быть минимум 2 символа');
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_URL}/auth`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username })
-                });
-                const data = await response.json();
-
-                if (response.ok) {
-                    currentUser = username;
-                    document.getElementById('loginPage').style.display = 'none';
-                    document.getElementById('mainPage').style.display = 'block';
-                    document.getElementById('userDisplay').textContent = username;
-                    
-                    // Сразу загружаем данные
-                    loadSpots();
-                    updateVideo();
-                    
-                    // Затем запускаем периодическое обновление
-                    startUpdating();
-                    
-                } else {
-                    showError(data.error || 'Ошибка авторизации');
-                }
-            } catch (err) {
-                showError('Ошибка подключения к серверу');
-            }
-        }
-
-        async function loadSpots() {
-            try {
-                const response = await fetch(`${API_URL}/status`);
-                const data = await response.json();
-                
-                renderSpots(data.spots_status);
-                updateStats(data);
-
-                if (!data.is_running) {
-                    isRunning = false;
-                }
-            } catch (err) {
-                console.error('Ошибка загрузки данных:', err);
-            }
-        }
-
-        function renderSpots(spots) {
-            const grid = document.getElementById('spotsGrid');
-            
-            if (!spots || spots.length === 0) {
-                grid.innerHTML = '<div style="text-align: center; color: #999;">Нет данных о местах</div>';
-                return;
-            }
-            
-            grid.innerHTML = spots.map(spot => `
-                <button class="spot-button ${spot.occupied ? 'occupied' : 'free'}" disabled>
-                    <span>Место #${spot.id + 1}</span>
-                    <div class="spot-status">
-                        <span class="status-indicator" style="background: ${spot.occupied ? '#e74c3c' : '#27ae60'}"></span>
-                        ${spot.occupied ? 'ЗАНЯТО' : 'СВОБОДНО'}
+        <!-- Screen 5: Dashboard -->
+        <div class="screen dashboard" id="dashboard-screen">
+            <div class="dashboard-header">
+                <div class="greeting">Hello, <span id="user-greeting"></span>! 👋</div>
+                <div class="location-title" id="selected-location"></div>
+                <div id="error-message" class="error-badge hidden"></div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="free-count">-</div>
+                        <div class="stat-label">Free</div>
                     </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="occupied-count">-</div>
+                        <div class="stat-label">Occupied</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="occupancy-rate">-</div>
+                        <div class="stat-label">Full</div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="dashboard-content">
+                <div class="camera-card">
+                    <div class="camera-header">
+                        <div class="camera-title">📹 Live Camera</div>
+                        <div class="live-badge">
+                            <div class="live-dot"></div>
+                            LIVE
+                        </div>
+                    </div>
+                    <div class="camera-feed" id="camera-feed">
+                        <div class="camera-placeholder">
+                            <div style="font-size: 48px; margin-bottom: 10px;">📹</div>
+                            <div>Loading camera feed...</div>
+                        </div>
+                    </div>
+                    <div class="parking-info">
+                        <span>Cars detected: <strong id="detected-count">0</strong></span>
+                        <span id="model-version">YOLO v11</span>
+                    </div>
+                </div>
+
+
+                <div class="parking-grid-card">
+                    <div class="parking-grid-header">
+                        <div class="camera-title">🅿️ Parking Status</div>
+                        <div style="color: #999; font-size: 13px;">Real-time</div>
+                    </div>
+                    <div class="parking-grid" id="parking-grid"></div>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-color free"></div>
+                            <span>Free (<span id="legend-free">0</span>)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color occupied"></div>
+                            <span>Occupied (<span id="legend-occupied">0</span>)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="bottom-nav">
+                <div class="nav-item active" onclick="switchTab(event, 'home')">
+                    <div class="nav-icon">🏠</div>
+                    <div class="nav-label">Home</div>
+                </div>
+                <div class="nav-item" onclick="switchTab(event, 'map')">
+                    <div class="nav-icon">🗺️</div>
+                    <div class="nav-label">Map</div>
+                </div>
+                <div class="nav-item" onclick="switchTab(event, 'profile')">
+                    <div class="nav-icon">👤</div>
+                    <div class="nav-label">Profile</div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Screen 6: Map -->
+        <div class="screen dashboard" id="map-screen">
+            <div class="map-header">
+                <div class="map-header-title">🗺️ Bishkek Map</div>
+            </div>
+            <div class="map-content">
+                <div class="map-container">
+                    <img
+                        src="https://static-maps.yandex.ru/1.x/?ll=74.6,42.87&z=12&l=map&size=450,450"
+                        alt="Bishkek map overview">
+                </div>
+            </div>
+
+
+            <div class="bottom-nav">
+                <div class="nav-item" onclick="switchTab(event, 'home')">
+                    <div class="nav-icon">🏠</div>
+                    <div class="nav-label">Home</div>
+                </div>
+                <div class="nav-item active" onclick="switchTab(event, 'map')">
+                    <div class="nav-icon">🗺️</div>
+                    <div class="nav-label">Map</div>
+                </div>
+                <div class="nav-item" onclick="switchTab(event, 'profile')">
+                    <div class="nav-icon">👤</div>
+                    <div class="nav-label">Profile</div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Screen 7: Profile -->
+        <div class="screen dashboard" id="profile-screen">
+            <div class="dashboard-header">
+                <div class="location-title">👤 My Profile</div>
+            </div>
+
+
+            <div class="profile-content">
+                <div class="profile-avatar">👤</div>
+                <div class="profile-name" id="profile-name">User Name</div>
+                <div class="profile-email">user@parkinganalyzer.com</div>
+
+
+                <div class="profile-card">
+                    <div class="profile-item">
+                        <div class="profile-item-icon">📍</div>
+                        <div class="profile-item-info">
+                            <div class="profile-item-label">Location</div>
+                            <div class="profile-item-value" id="profile-location">Ala-Too Square</div>
+                        </div>
+                    </div>
+                    <div class="profile-item">
+                        <div class="profile-item-icon">📊</div>
+                        <div class="profile-item-info">
+                            <div class="profile-item-label">Total Visits</div>
+                            <div class="profile-item-value">24 times</div>
+                        </div>
+                    </div>
+                    <div class="profile-item">
+                        <div class="profile-item-icon">⏰</div>
+                        <div class="profile-item-info">
+                            <div class="profile-item-label">Member Since</div>
+                            <div class="profile-item-value" id="member-since">Today</div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <button class="logout-button" onclick="logout()">
+                    🚪 Log Out
                 </button>
-            `).join('');
+            </div>
+
+
+            <div class="bottom-nav">
+                <div class="nav-item" onclick="switchTab(event, 'home')">
+                    <div class="nav-icon">🏠</div>
+                    <div class="nav-label">Home</div>
+                </div>
+                <div class="nav-item" onclick="switchTab(event, 'map')">
+                    <div class="nav-icon">🗺️</div>
+                    <div class="nav-label">Map</div>
+                </div>
+                <div class="nav-item active" onclick="switchTab(event, 'profile')">
+                    <div class="nav-icon">👤</div>
+                    <div class="nav-label">Profile</div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+
+<script>
+    let currentScreen = 0;
+    let userName = '';
+    let selectedLocation = '';
+    let currentTab = 'home';
+
+
+    function nextScreen(screenIndex) {
+        const screens = document.querySelectorAll('.screen');
+        screens[currentScreen].classList.remove('active');
+        screens[currentScreen].classList.add('exit');
+
+
+        currentScreen = screenIndex;
+
+
+        setTimeout(() => {
+            screens.forEach(s => s.classList.remove('exit'));
+            screens[currentScreen].classList.add('active');
+        }, 100);
+    }
+
+
+    async function submitName() {
+        const input = document.getElementById('username-input');
+        userName = input.value.trim();
+
+
+        if (userName.length < 2) {
+            alert('Name must be at least 2 characters');
+            return;
         }
 
-        function updateStats(data) {
-            document.getElementById('freeCount').textContent = data.free_spots || 0;
-            document.getElementById('totalCount').textContent = data.total_spots || 33;
-            document.getElementById('occupancyDisplay').textContent = (data.occupancy_rate || 0) + '%';
-            
-            if (data.last_update) {
-                const time = new Date(data.last_update).toLocaleTimeString('ru-RU', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
-                document.getElementById('lastUpdateDisplay').textContent = time;
-            } else {
-                document.getElementById('lastUpdateDisplay').textContent = 'Нет данных';
-            }
+
+        try {
+            const response = await fetch(`/api/auth`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: userName })
+            });
+            const data = await response.json();
+            console.log('Auth response:', data);
+        } catch (error) {
+            console.log('Backend not connected, continuing anyway');
         }
 
-        async function updateVideo() {
-            try {
-                const response = await fetch(`${API_URL}/video-feed`);
-                const data = await response.json();
 
-                if (response.ok && data.frame) {
-                    const container = document.getElementById('cameraContainer');
-                    let img = document.getElementById('cameraImg');
-                    
-                    if (!img) {
-                        img = document.createElement('img');
-                        img.id = 'cameraImg';
-                        img.className = 'camera-frame';
-                        container.innerHTML = '';
-                        container.appendChild(img);
-                    }
-                    img.src = data.frame;
-                }
-            } catch (err) {
-                console.error('Ошибка обновления видео:', err);
-            }
-        }
+        nextScreen(2);
+    }
 
-        function startUpdating() {
-            if (intervalId) clearInterval(intervalId);
-            
-            intervalId = setInterval(() => {
-                if (isRunning) {
-                    loadSpots();
-                    updateVideo();
-                } else {
-                    clearInterval(intervalId);
-                    document.getElementById('cameraContainer').innerHTML = 
-                        '<div class="camera-placeholder">Анализ остановлен</div>';
-                }
-            }, 500);
-        }
 
-        
-        function logout() {
-            isRunning = false;
-            currentUser = '';
-            
-            if (intervalId) clearInterval(intervalId);
-            
-            document.getElementById('mainPage').style.display = 'none';
-            document.getElementById('loginPage').style.display = 'flex';
-            document.getElementById('username').value = '';
-            document.getElementById('loginError').textContent = '';
-        }
+    function selectLocation(e, location) {
+        selectedLocation = location;
 
-        function showError(text) {
-            document.getElementById('loginError').textContent = '❌ ' + text;
-        }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('freeCount').textContent = '0';
-            document.getElementById('totalCount').textContent = '33';
-            document.getElementById('occupancyDisplay').textContent = '0%';
-            document.getElementById('username').focus();
+        document.querySelectorAll('.location-card').forEach(card => {
+            card.classList.remove('selected');
         });
-    </script>
+        e.currentTarget.classList.add('selected');
+
+
+        setTimeout(() => {
+            document.getElementById('user-greeting').textContent = userName;
+            document.getElementById('selected-location').textContent = selectedLocation;
+            document.getElementById('profile-name').textContent = userName;
+            document.getElementById('profile-location').textContent = selectedLocation;
+
+
+            const now = new Date();
+            document.getElementById('member-since').textContent = now.toLocaleDateString();
+
+
+            nextScreen(4);
+            startDashboard();
+        }, 500);
+    }
+
+
+    let statusInterval;
+    let videoInterval;
+
+
+    function startDashboard() {
+        fetchParkingStatus();
+        fetchVideoFeed();
+
+
+        statusInterval = setInterval(fetchParkingStatus, 3000);
+        videoInterval = setInterval(fetchVideoFeed, 2000);
+    }
+
+
+    async function fetchParkingStatus() {
+        try {
+            const loc = selectedLocation || 'Ala-Too Square';
+
+
+            const response = await fetch(`/api/status?location=${encodeURIComponent(loc)}`);
+            if (!response.ok) {
+                throw new Error('Non-OK response from backend');
+            }
+            const data = await response.json();
+
+
+            document.getElementById('free-count').textContent = data.free_spots;
+            document.getElementById('occupied-count').textContent =
+                data.total_spots - data.free_spots;
+            document.getElementById('occupancy-rate').textContent =
+                data.occupancy_rate + '%';
+            document.getElementById('detected-count').textContent =
+                data.detected_cars_count;
+            document.getElementById('model-version').textContent =
+                data.model_version || 'YOLO v11';
+            document.getElementById('legend-free').textContent = data.free_spots;
+            document.getElementById('legend-occupied').textContent =
+                data.total_spots - data.free_spots;
+
+
+            document.getElementById('error-message').classList.add('hidden');
+            updateParkingGrid(data.spots_status);
+        } catch (error) {
+            console.error('Error fetching status:', error);
+
+
+            const errorMsg = document.getElementById('error-message');
+            errorMsg.textContent = 'Backend not connected - demo mode';
+            errorMsg.classList.remove('hidden');
+
+
+            const mockData = generateMockData();
+            document.getElementById('free-count').textContent =
+                mockData.free_spots;
+            document.getElementById('occupied-count').textContent =
+                mockData.total_spots - mockData.free_spots;
+            document.getElementById('occupancy-rate').textContent =
+                mockData.occupancy_rate + '%';
+            document.getElementById('detected-count').textContent =
+                mockData.detected_cars_count;
+            document.getElementById('model-version').textContent = 'Demo Mode';
+            document.getElementById('legend-free').textContent =
+                mockData.free_spots;
+            document.getElementById('legend-occupied').textContent =
+                mockData.total_spots - mockData.free_spots;
+
+
+            updateParkingGrid(mockData.spots_status);
+        }
+    }
+
+
+    async function fetchVideoFeed() {
+        try {
+            const loc = selectedLocation || 'Ala-Too Square';
+
+
+            const response = await fetch(`/api/video-feed?location=${encodeURIComponent(loc)}`);
+            if (!response.ok) return;
+            const data = await response.json();
+
+
+            if (data.success && data.frame) {
+                document.getElementById('camera-feed').innerHTML =
+                    `<img src="${data.frame}" alt="Live feed" />`;
+            }
+        } catch (error) {
+            console.log('Video feed not available');
+        }
+    }
+
+
+    function updateParkingGrid(spots) {
+        const grid = document.getElementById('parking-grid');
+
+
+        if (!spots || !Array.isArray(spots)) return;
+
+
+        if (grid.children.length === 0) {
+            spots.forEach(spot => {
+                const spotEl = document.createElement('div');
+                spotEl.className = `parking-spot ${spot.occupied ? 'occupied' : 'free'}`;
+                spotEl.innerHTML = `
+                    ${spot.occupied ? '🚙' : '🚗'}
+                    <span class="spot-number">${spot.id + 1}</span>
+                `;
+                grid.appendChild(spotEl);
+            });
+        } else {
+            Array.from(grid.children).forEach((spotEl, i) => {
+                const spot = spots[i];
+                if (!spot) return;
+                spotEl.className = `parking-spot ${spot.occupied ? 'occupied' : 'free'}`;
+                spotEl.innerHTML = `
+                    ${spot.occupied ? '🚙' : '🚗'}
+                    <span class="spot-number">${spot.id + 1}</span>
+                `;
+            });
+        }
+    }
+
+
+    function generateMockData() {
+        const totalSpots = 35;
+        const spots = [];
+
+
+        for (let i = 0; i < totalSpots; i++) {
+            spots.push({
+                id: i,
+                occupied: Math.random() > 0.5
+            });
+        }
+
+
+        const freeSpots = spots.filter(s => !s.occupied).length;
+        const occupiedSpots = totalSpots - freeSpots;
+
+
+        return {
+            is_running: false,
+            free_spots: freeSpots,
+            total_spots: totalSpots,
+            spots_status: spots,
+            detected_cars_count: occupiedSpots,
+            detected_cars: [],
+            last_update: new Date().toISOString(),
+            occupancy_rate: Math.round((occupiedSpots / totalSpots) * 100),
+            model_version: 'Demo Mode'
+        };
+    }
+
+
+    function switchTab(e, tab) {
+        currentTab = tab;
+
+
+        const screens = {
+            'home': document.getElementById('dashboard-screen'),
+            'map': document.getElementById('map-screen'),
+            'profile': document.getElementById('profile-screen')
+        };
+
+
+        Object.values(screens).forEach(screen => {
+            screen.classList.remove('active');
+        });
+
+
+        screens[tab].classList.add('active');
+
+
+        document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        e.currentTarget.classList.add('active');
+    }
+
+
+    function logout() {
+        if (confirm('Are you sure you want to log out?')) {
+            clearInterval(statusInterval);
+            clearInterval(videoInterval);
+
+
+            userName = '';
+            selectedLocation = '';
+            currentTab = 'home';
+
+
+            document.getElementById('dashboard-screen').classList.remove('active');
+            document.getElementById('map-screen').classList.remove('active');
+            document.getElementById('profile-screen').classList.remove('active');
+
+
+            document.getElementById('welcome-screen').classList.add('active');
+            currentScreen = 0;
+        }
+    }
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const usernameInput = document.getElementById('username-input');
+        usernameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                submitName();
+            }
+        });
+    });
+</script>
+
+
 </body>
 </html>
+
+
+
+
+
