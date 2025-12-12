@@ -5,11 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartParkAI</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
 
         body {
@@ -60,10 +56,8 @@
 
         .screen {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -75,16 +69,8 @@
         }
 
 
-        .screen.active {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-
-        .screen.exit {
-            transform: translateX(-100%);
-            opacity: 0;
-        }
+        .screen.active { opacity: 1; transform: translateX(0); }
+        .screen.exit { transform: translateX(-100%); opacity: 0; }
 
 
         .welcome-icon {
@@ -139,9 +125,7 @@
         }
 
 
-        button:active {
-            transform: scale(0.95);
-        }
+        button:active { transform: scale(0.95); }
 
 
         .input-container {
@@ -163,9 +147,7 @@
         }
 
 
-        input:focus {
-            box-shadow: 0 0 0 4px rgba(255,255,255,0.3);
-        }
+        input:focus { box-shadow: 0 0 0 4px rgba(255,255,255,0.3); }
 
 
         .user-icon {
@@ -209,14 +191,8 @@
 
 
         @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-50px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
 
@@ -232,16 +208,10 @@
         }
 
 
-        .feature-text {
-            color: white;
-            font-size: 15px;
-        }
+        .feature-text { color: white; font-size: 15px; }
 
 
-        .location-cards {
-            width: 100%;
-            max-width: 320px;
-        }
+        .location-cards { width: 100%; max-width: 320px; }
 
 
         .location-card {
@@ -257,9 +227,7 @@
         }
 
 
-        .location-card:hover {
-            transform: scale(1.02);
-        }
+        .location-card:hover { transform: scale(1.02); }
 
 
         .location-card.selected {
@@ -276,9 +244,7 @@
         }
 
 
-        .location-info {
-            flex: 1;
-        }
+        .location-info { flex: 1; }
 
 
         .location-name {
@@ -289,10 +255,7 @@
         }
 
 
-        .location-desc {
-            font-size: 14px;
-            color: #666;
-        }
+        .location-desc { font-size: 14px; color: #666; }
 
 
         .dashboard {
@@ -309,18 +272,8 @@
         }
 
 
-        .greeting {
-            font-size: 14px;
-            opacity: 0.8;
-            margin-bottom: 5px;
-        }
-
-
-        .location-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 20px;
-        }
+        .greeting { font-size: 14px; opacity: 0.8; margin-bottom: 5px; }
+        .location-title { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
 
 
         .stats-grid {
@@ -339,17 +292,8 @@
         }
 
 
-        .stat-value {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-
-
-        .stat-label {
-            font-size: 12px;
-            opacity: 0.9;
-        }
+        .stat-value { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+        .stat-label { font-size: 12px; opacity: 0.9; }
 
 
         .dashboard-content {
@@ -376,11 +320,7 @@
         }
 
 
-        .camera-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-        }
+        .camera-title { font-size: 16px; font-weight: 600; color: #333; }
 
 
         .live-badge {
@@ -420,11 +360,7 @@
         }
 
 
-        .camera-feed img {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
+        .camera-feed img { width: 100%; height: auto; display: block; }
 
 
         .camera-placeholder {
@@ -474,19 +410,11 @@
         }
 
 
-        .parking-spot:hover {
-            transform: scale(1.1);
-        }
+        .parking-spot:hover { transform: scale(1.1); }
 
 
-        .parking-spot.free {
-            background: linear-gradient(135deg, #34d399, #10b981);
-        }
-
-
-        .parking-spot.occupied {
-            background: linear-gradient(135deg, #f87171, #ef4444);
-        }
+        .parking-spot.free { background: linear-gradient(135deg, #34d399, #10b981); }
+        .parking-spot.occupied { background: linear-gradient(135deg, #f87171, #ef4444); }
 
 
         .spot-number {
@@ -516,28 +444,14 @@
         }
 
 
-        .legend-color {
-            width: 16px;
-            height: 16px;
-            border-radius: 4px;
-        }
-
-
-        .legend-color.free {
-            background: linear-gradient(135deg, #34d399, #10b981);
-        }
-
-
-        .legend-color.occupied {
-            background: linear-gradient(135deg, #f87171, #ef4444);
-        }
+        .legend-color { width: 16px; height: 16px; border-radius: 4px; }
+        .legend-color.free { background: linear-gradient(135deg, #34d399, #10b981); }
+        .legend-color.occupied { background: linear-gradient(135deg, #f87171, #ef4444); }
 
 
         .bottom-nav {
             position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
+            bottom: 0; left: 0; right: 0;
             background: white;
             border-radius: 40px 40px 0 0;
             padding: 20px;
@@ -559,19 +473,9 @@
         }
 
 
-        .nav-item.active {
-            color: #667eea;
-        }
-
-
-        .nav-icon {
-            font-size: 24px;
-        }
-
-
-        .nav-label {
-            font-size: 12px;
-        }
+        .nav-item.active { color: #667eea; }
+        .nav-icon { font-size: 24px; }
+        .nav-label { font-size: 12px; }
 
 
         .error-badge {
@@ -585,32 +489,7 @@
         }
 
 
-        .loading {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-        }
-
-
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(255,255,255,0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-
-        .hidden {
-            display: none !important;
-        }
+        .hidden { display: none !important; }
 
 
         .parking-info {
@@ -622,7 +501,7 @@
         }
 
 
-        /* Profile Page Styles */
+        /* Profile Page */
         .profile-content {
             padding: 24px;
             padding-bottom: 100px;
@@ -680,9 +559,7 @@
         }
 
 
-        .profile-item:last-child {
-            border-bottom: none;
-        }
+        .profile-item:last-child { border-bottom: none; }
 
 
         .profile-item-icon {
@@ -697,9 +574,7 @@
         }
 
 
-        .profile-item-info {
-            flex: 1;
-        }
+        .profile-item-info { flex: 1; }
 
 
         .profile-item-label {
@@ -737,12 +612,8 @@
         }
 
 
-        /* Map Page Styles */
-        .map-content {
-            padding: 0;
-            height: 100%;
-            overflow: hidden;
-        }
+        /* Map Page */
+        .map-content { padding: 0; height: 100%; overflow: hidden; }
 
 
         .map-header {
@@ -772,38 +643,6 @@
             border: none;
             object-fit: cover;
             display: block;
-        }
-
-
-        .map-controls {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 5;
-        }
-
-
-        .map-control-btn {
-            width: 48px;
-            height: 48px;
-            background: white;
-            border: none;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            transition: all 0.3s;
-        }
-
-
-        .map-control-btn:hover {
-            transform: scale(1.1);
         }
     </style>
 </head>
@@ -872,7 +711,7 @@
                     <div class="location-emoji">🏢</div>
                     <div class="location-info">
                         <div class="location-name">Technopark</div>
-                        <div class="location-desc">35 parking spots</div>
+                        <div class="location-desc">19 parking spots</div>
                     </div>
                 </div>
             </div>
@@ -1030,9 +869,7 @@
                 </div>
 
 
-                <button class="logout-button" onclick="logout()">
-                    🚪 Log Out
-                </button>
+                <button class="logout-button" onclick="logout()">🚪 Log Out</button>
             </div>
 
 
@@ -1064,6 +901,17 @@
     let currentTab = 'home';
 
 
+    // ✅ Ala-Too оставляем 35, Technopark делаем 19
+    const LOCATION_TOTAL_SPOTS = {
+        'Ala-Too Square': 35,
+        'Technopark': 19
+    };
+
+
+    let statusInterval = null;
+    let videoInterval = null;
+
+
     function nextScreen(screenIndex) {
         const screens = document.querySelectorAll('.screen');
         screens[currentScreen].classList.remove('active');
@@ -1091,16 +939,15 @@
         }
 
 
+        // Optional backend auth (если есть)
         try {
-            const response = await fetch(`/api/auth`, {
+            await fetch(`/api/auth`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: userName })
             });
-            const data = await response.json();
-            console.log('Auth response:', data);
-        } catch (error) {
-            console.log('Backend not connected, continuing anyway');
+        } catch (e) {
+            // no-op
         }
 
 
@@ -1112,9 +959,7 @@
         selectedLocation = location;
 
 
-        document.querySelectorAll('.location-card').forEach(card => {
-            card.classList.remove('selected');
-        });
+        document.querySelectorAll('.location-card').forEach(card => card.classList.remove('selected'));
         e.currentTarget.classList.add('selected');
 
 
@@ -1129,17 +974,22 @@
             document.getElementById('member-since').textContent = now.toLocaleDateString();
 
 
+            // ✅ Сбрасываем сетку при смене локации, чтобы не "залипали" старые 35
+            document.getElementById('parking-grid').innerHTML = '';
+
+
             nextScreen(4);
             startDashboard();
         }, 500);
     }
 
 
-    let statusInterval;
-    let videoInterval;
-
-
     function startDashboard() {
+        // ✅ чтобы интервалы не дублировались
+        if (statusInterval) clearInterval(statusInterval);
+        if (videoInterval) clearInterval(videoInterval);
+
+
         fetchParkingStatus();
         fetchVideoFeed();
 
@@ -1152,31 +1002,21 @@
     async function fetchParkingStatus() {
         try {
             const loc = selectedLocation || 'Ala-Too Square';
-
-
             const response = await fetch(`/api/status?location=${encodeURIComponent(loc)}`);
+
+
             if (!response.ok) {
                 throw new Error('Non-OK response from backend');
             }
+
+
             const data = await response.json();
 
 
-            document.getElementById('free-count').textContent = data.free_spots;
-            document.getElementById('occupied-count').textContent =
-                data.total_spots - data.free_spots;
-            document.getElementById('occupancy-rate').textContent =
-                data.occupancy_rate + '%';
-            document.getElementById('detected-count').textContent =
-                data.detected_cars_count;
-            document.getElementById('model-version').textContent =
-                data.model_version || 'YOLO v11';
-            document.getElementById('legend-free').textContent = data.free_spots;
-            document.getElementById('legend-occupied').textContent =
-                data.total_spots - data.free_spots;
-
-
+            applyStatusToUI(data);
             document.getElementById('error-message').classList.add('hidden');
-            updateParkingGrid(data.spots_status);
+
+
         } catch (error) {
             console.error('Error fetching status:', error);
 
@@ -1186,88 +1026,86 @@
             errorMsg.classList.remove('hidden');
 
 
-            const mockData = generateMockData();
-            document.getElementById('free-count').textContent =
-                mockData.free_spots;
-            document.getElementById('occupied-count').textContent =
-                mockData.total_spots - mockData.free_spots;
-            document.getElementById('occupancy-rate').textContent =
-                mockData.occupancy_rate + '%';
-            document.getElementById('detected-count').textContent =
-                mockData.detected_cars_count;
-            document.getElementById('model-version').textContent = 'Demo Mode';
-            document.getElementById('legend-free').textContent =
-                mockData.free_spots;
-            document.getElementById('legend-occupied').textContent =
-                mockData.total_spots - mockData.free_spots;
-
-
-            updateParkingGrid(mockData.spots_status);
+            const loc = selectedLocation || 'Ala-Too Square';
+            const mockData = generateMockData(loc);
+            applyStatusToUI(mockData);
         }
+    }
+
+
+    function applyStatusToUI(data) {
+        // Защита от кривых/пустых данных
+        const total = Number(data.total_spots ?? 0);
+        const free = Number(data.free_spots ?? 0);
+        const occupied = Math.max(0, total - free);
+
+
+        document.getElementById('free-count').textContent = free;
+        document.getElementById('occupied-count').textContent = occupied;
+        document.getElementById('occupancy-rate').textContent = (data.occupancy_rate ?? Math.round((occupied / Math.max(1, total)) * 100)) + '%';
+
+
+        document.getElementById('detected-count').textContent = data.detected_cars_count ?? occupied;
+        document.getElementById('model-version').textContent = data.model_version || 'YOLO v11';
+
+
+        document.getElementById('legend-free').textContent = free;
+        document.getElementById('legend-occupied').textContent = occupied;
+
+
+        updateParkingGrid(data.spots_status);
     }
 
 
     async function fetchVideoFeed() {
         try {
             const loc = selectedLocation || 'Ala-Too Square';
-
-
             const response = await fetch(`/api/video-feed?location=${encodeURIComponent(loc)}`);
             if (!response.ok) return;
+
+
             const data = await response.json();
-
-
             if (data.success && data.frame) {
                 document.getElementById('camera-feed').innerHTML =
                     `<img src="${data.frame}" alt="Live feed" />`;
             }
         } catch (error) {
-            console.log('Video feed not available');
+            // no-op
         }
     }
 
 
+    // ✅ ВАЖНО: всегда перерисовываем сетку, чтобы Technopark показывал 19, а не 35
     function updateParkingGrid(spots) {
         const grid = document.getElementById('parking-grid');
-
-
         if (!spots || !Array.isArray(spots)) return;
 
 
-        if (grid.children.length === 0) {
-            spots.forEach(spot => {
-                const spotEl = document.createElement('div');
-                spotEl.className = `parking-spot ${spot.occupied ? 'occupied' : 'free'}`;
-                spotEl.innerHTML = `
-                    ${spot.occupied ? '🚙' : '🚗'}
-                    <span class="spot-number">${spot.id + 1}</span>
-                `;
-                grid.appendChild(spotEl);
-            });
-        } else {
-            Array.from(grid.children).forEach((spotEl, i) => {
-                const spot = spots[i];
-                if (!spot) return;
-                spotEl.className = `parking-spot ${spot.occupied ? 'occupied' : 'free'}`;
-                spotEl.innerHTML = `
-                    ${spot.occupied ? '🚙' : '🚗'}
-                    <span class="spot-number">${spot.id + 1}</span>
-                `;
-            });
-        }
+        grid.innerHTML = '';
+
+
+        spots.forEach((spot, i) => {
+            const spotEl = document.createElement('div');
+            const isOccupied = !!spot.occupied;
+
+
+            spotEl.className = `parking-spot ${isOccupied ? 'occupied' : 'free'}`;
+            spotEl.innerHTML = `
+                ${isOccupied ? '🚙' : '🚗'}
+                <span class="spot-number">${i + 1}</span>
+            `;
+            grid.appendChild(spotEl);
+        });
     }
 
 
-    function generateMockData() {
-        const totalSpots = 35;
+    function generateMockData(location) {
+        const totalSpots = LOCATION_TOTAL_SPOTS[location] ?? 35;
         const spots = [];
 
 
         for (let i = 0; i < totalSpots; i++) {
-            spots.push({
-                id: i,
-                occupied: Math.random() > 0.5
-            });
+            spots.push({ id: i, occupied: Math.random() > 0.5 });
         }
 
 
@@ -1300,26 +1138,23 @@
         };
 
 
-        Object.values(screens).forEach(screen => {
-            screen.classList.remove('active');
-        });
-
-
+        Object.values(screens).forEach(screen => screen.classList.remove('active'));
         screens[tab].classList.add('active');
 
 
-
-        document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
-            item.classList.remove('active');
-        });
+        document.querySelectorAll('.bottom-nav .nav-item').forEach(item => item.classList.remove('active'));
         e.currentTarget.classList.add('active');
     }
 
 
     function logout() {
         if (confirm('Are you sure you want to log out?')) {
-            clearInterval(statusInterval);
-            clearInterval(videoInterval);
+            if (statusInterval) clearInterval(statusInterval);
+            if (videoInterval) clearInterval(videoInterval);
+
+
+            statusInterval = null;
+            videoInterval = null;
 
 
             userName = '';
@@ -1341,9 +1176,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         const usernameInput = document.getElementById('username-input');
         usernameInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                submitName();
-            }
+            if (e.key === 'Enter') submitName();
         });
     });
 </script>
@@ -1351,6 +1184,7 @@
 
 </body>
 </html>
+
 
 
 
