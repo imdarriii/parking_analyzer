@@ -470,6 +470,7 @@ def process_video(system: ParkingSystem):
             coords = spot["coords"]
             cv2.polylines(frame, [coords], True, color, thickness)
 
+
             text_x = coords[0][0]
             text_y = coords[0][1] - 5
             cv2.putText(frame, f"{i + 1}", (text_x, text_y),

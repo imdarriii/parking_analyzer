@@ -13,6 +13,7 @@ logging.basicConfig(level=logging.INFO)
 
 # --- 1. Конфигурация проекта ---
 
+
 # Загружаем модель YOLO
 try:
     # Используем 'n' (nano) версию для быстрой работы
