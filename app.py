@@ -1,44 +1,58 @@
-from flask import Flask, jsonify, request, send_from_directory
-from flask_cors import CORS
-import cv2
-import threading
-from ultralytics import YOLO
-from datetime import datetime
+import os
+import time
 import base64
 import logging
+import threading
+from datetime import datetime
+
+
+import cv2
 import numpy as np
-import time
-import os
+from flask import Flask, jsonify, request, send_from_directory, render_template
+from flask_cors import CORS
+from ultralytics import YOLO
 
 
 # ---------------------------------------------------------
-# 1. APP + LOGGING
+# 1) APP + LOGGING
 # ---------------------------------------------------------
-app = Flask(__name__, static_folder=".", static_url_path="")
+app = Flask(__name__)
 CORS(app)
-logging.basicConfig(level=logging.INFO)
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
+
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 # ---------------------------------------------------------
-# 2. YOLO MODEL
+# 2) YOLO MODEL
 # ---------------------------------------------------------
 try:
     model = YOLO("yolo11s.pt")
-    logging.info("✓ YOLO v11 модель загружена")
+    logging.info("✓ YOLO v11 model loaded")
 except Exception as e:
-    logging.error(f"✗ Ошибка загрузки модели: {e}")
+    logging.error(f"✗ YOLO load error: {e}")
     model = None
 
 
 # ---------------------------------------------------------
-# 3. CONSTANTS
+# 3) CONSTANTS
 # ---------------------------------------------------------
-CAR_CLASSES = {2, 3, 5, 7}
+CAR_CLASSES = {2, 3, 5, 7}          # COCO: car, motorcycle, bus, truck
 PROCESS_EVERY_N_FRAMES = 3
 
 
 FRAME_WIDTH = 960
 FRAME_HEIGHT = 720
+
+
+# IMPORTANT: video must be inside repo
+TECHNOPARK_VIDEO_RELATIVE = os.path.join("videos", "technopark.mp4")
 
 
 AUTO_LEARNING_FRAMES = 60
@@ -48,24 +62,13 @@ MOVEMENT_THRESHOLD = 15
 MIN_BOX_AREA = 800
 
 
-# Источники можно переопределить через Render ENV vars
-ALA_TOO_SOURCE = os.getenv(
-    "ALA_TOO_SOURCE",
-    "https://webcam.elcat.kg/Bishkek_Ala-Too_Square/tracks-v1/mono.m3u8",
-)
-
-
-# На Render твоего Windows-пути нет, поэтому делаем env/relative
-TECHNOPARK_VIDEO_PATH = os.getenv("TECHNOPARK_VIDEO_PATH", "technopark.mp4")
-
-
 parking_systems = {}
-_systems_started = False
-_systems_lock = threading.Lock()
+_initialized = False
+_init_lock = threading.Lock()
 
 
 # ---------------------------------------------------------
-# 4. HELPERS
+# 4) HELPERS
 # ---------------------------------------------------------
 def calculate_iou(box1, box2):
     x1_1, y1_1, x2_1, y2_1 = box1
@@ -86,8 +89,6 @@ def calculate_iou(box1, box2):
     area1 = (x2_1 - x1_1) * (y2_1 - y1_1)
     area2 = (x2_2 - x1_2) * (y2_2 - y1_2)
     union = area1 + area2 - intersection
-
-
     return intersection / union if union > 0 else 0.0
 
 
@@ -98,7 +99,7 @@ def box_distance(box1, box2):
     cy1 = (box1[1] + box1[3]) / 2
     cx2 = (box2[0] + box2[2]) / 2
     cy2 = (box2[1] + box2[3]) / 2
-    return np.sqrt((cx1 - cx2) ** 2 + (cy1 - cy2) ** 2)
+    return float(np.sqrt((cx1 - cx2) ** 2 + (cy1 - cy2) ** 2))
 
 
 
@@ -123,61 +124,51 @@ def normalize_location(loc_raw: str) -> str:
     if not loc_raw:
         return "ala-too"
     loc = loc_raw.strip().lower()
+
+
+    # Accept many variants
     if "tech" in loc or "техно" in loc:
         return "technopark"
+    if "ala" in loc or "ала" in loc:
+        return "ala-too"
+
+
+    # fallback
     return "ala-too"
 
 
 
 
-def safe_get_system():
-    # Убедимся, что системы запущены (на gunicorn это критично)
-    ensure_systems_started()
-
-
-    if not parking_systems:
-        return None, "no_systems"
-
-
+def get_system_from_request():
     loc_raw = request.args.get("location", "")
     loc = normalize_location(loc_raw)
 
 
-    if loc not in parking_systems:
-        loc = "ala-too"
-
-
-    sys = parking_systems.get(loc)
-    if not sys:
-        return None, "missing_system"
-
-
-    return sys, None
+    system = parking_systems.get(loc)
+    if system is None:
+        raise ValueError(f"Unknown or not initialized location: {loc}")
+    return system
 
 
 
 
 # ---------------------------------------------------------
-# 5. PARKING SYSTEM CLASS
+# 5) PARKING SYSTEM CLASS
 # ---------------------------------------------------------
 class ParkingSystem:
-    def __init__(self, location_id: str, source: str, auto_learn=False):
+    def __init__(self, location_id: str, source: str, auto_learn: bool):
         self.location_id = location_id
         self.source = source
         self.auto_learn = auto_learn
 
 
-        lower_src = source.lower()
-        if lower_src.startswith("http"):
-            self.is_file = False
-        else:
-            self.is_file = lower_src.endswith((".mp4", ".mov", ".avi", ".mkv"))
+        lower_src = (source or "").lower()
+        self.is_file = lower_src.endswith((".mp4", ".mov", ".avi", ".mkv"))
 
 
-        logging.info(f"🔧 Инициализация ParkingSystem ({self.location_id}), auto_learn={auto_learn}")
+        logging.info(f"🔧 Init ParkingSystem({self.location_id}) auto_learn={self.auto_learn}")
 
 
-        # learning state
         self.learning_phase = auto_learn
         self.learning_frames = 0
         self.detected_spots_history = []
@@ -225,8 +216,6 @@ class ParkingSystem:
 
 
             skew_offset = spot_size
-
-
             spot = np.array(
                 [
                     [x_left + skew_offset, y_base],
@@ -253,6 +242,8 @@ class ParkingSystem:
             try:
                 cls = int(box.cls[0])
                 conf = float(box.conf[0])
+
+
                 if cls not in CAR_CLASSES or conf < 0.4:
                     continue
 
@@ -293,7 +284,7 @@ class ParkingSystem:
 
 
     def _finalize_learning(self):
-        logging.info(f"🎓 ({self.location_id}) Завершение обучения...")
+        logging.info(f"🎓 ({self.location_id}) Finalizing learning...")
 
 
         all_boxes = []
@@ -302,7 +293,7 @@ class ParkingSystem:
 
 
         if len(all_boxes) == 0:
-            logging.warning(f"⚠ ({self.location_id}) Не обнаружено машин во время обучения")
+            logging.warning(f"⚠ ({self.location_id}) No cars detected during learning")
             self.learning_phase = False
             return
 
@@ -363,7 +354,7 @@ class ParkingSystem:
         self.learning_phase = False
         self.detected_spots_history = []
         self.previous_detections = []
-        logging.info(f"✅ ({self.location_id}) Обучение завершено! Создано {len(self.parking_spots)} парковочных мест")
+        logging.info(f"✅ ({self.location_id}) Learning done! Spots: {len(self.parking_spots)}")
 
 
     def check_spot_occupancy(self, spot, detections):
@@ -378,13 +369,13 @@ class ParkingSystem:
             spot_coords = spot["coords"]
             x1_s, y1_s = spot_coords[0]
             x2_s, y2_s = spot_coords[2]
-            spot_box = [x1_s, y1_s, x2_s, y2_s]
+            spot_box = [int(x1_s), int(y1_s), int(x2_s), int(y2_s)]
         else:
             return False
 
 
         spot_area = (spot_box[2] - spot_box[0]) * (spot_box[3] - spot_box[1])
-        if spot_area == 0:
+        if spot_area <= 0:
             return False
 
 
@@ -392,6 +383,8 @@ class ParkingSystem:
             try:
                 cls = int(box.cls[0])
                 conf = float(box.conf[0])
+
+
                 if cls not in CAR_CLASSES or conf < 0.25:
                     continue
 
@@ -430,31 +423,34 @@ class ParkingSystem:
 
 
 # ---------------------------------------------------------
-# 6. VIDEO THREAD
+# 6) VIDEO LOOP
 # ---------------------------------------------------------
 def process_video(system: ParkingSystem):
-    cap = cv2.VideoCapture(system.source, cv2.CAP_FFMPEG)
+    # IMPORTANT: make file path absolute if it's a file
+    src = system.source
+    if system.is_file:
+        src = os.path.join(BASE_DIR, system.source)
+
+
+    cap = cv2.VideoCapture(src)
 
 
     if not cap.isOpened():
-        logging.error(f"✗ ({system.location_id}) Не удалось открыть источник: {system.source}")
+        logging.error(f"✗ ({system.location_id}) Failed to open source: {system.source}")
         system.connection_status = "Failed to connect"
         system.is_running = False
         return
 
 
     cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-    cap.set(cv2.CAP_PROP_FPS, 30)
 
 
-    logging.info(f"✓ ({system.location_id}) Подключение установлено")
+    logging.info(f"✓ ({system.location_id}) Connected")
     system.connection_status = "Connected"
 
 
     frame_count = 0
     last_results = None
-    reconnect_attempts = 0
-    max_reconnect_attempts = 5
 
 
     while system.is_running:
@@ -463,60 +459,54 @@ def process_video(system: ParkingSystem):
 
         if not ret:
             if system.is_file:
-                logging.info(f"🔁 ({system.location_id}) Перематываем видео")
+                # loop file
                 cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                time.sleep(0.03)
                 continue
 
 
-            logging.warning(f"⚠ ({system.location_id}) Потеря кадра")
             system.connection_status = "Reconnecting..."
+            time.sleep(1.0)
             cap.release()
-            time.sleep(2)
-            cap = cv2.VideoCapture(system.source, cv2.CAP_FFMPEG)
-            cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-            reconnect_attempts += 1
-
-
-            if reconnect_attempts >= max_reconnect_attempts:
-                logging.error(f"✗ ({system.location_id}) Превышено количество попыток")
-                system.connection_status = "Connection failed"
-                break
-
-
+            cap = cv2.VideoCapture(src)
             if cap.isOpened():
-                reconnect_attempts = 0
                 system.connection_status = "Connected"
-            continue
+                continue
+            else:
+                system.connection_status = "Connection failed"
+                time.sleep(2.0)
+                continue
 
 
-        reconnect_attempts = 0
         frame = cv2.resize(frame, (FRAME_WIDTH, FRAME_HEIGHT))
         frame_count += 1
 
 
         # YOLO
-        if model is None:
-            results = None
-        elif frame_count % PROCESS_EVERY_N_FRAMES == 0:
-            try:
-                results = model(
-                    frame,
-                    verbose=False,
-                    conf=0.25,
-                    iou=0.45,
-                    imgsz=640,
-                    half=False,
-                    device="cpu",
-                )[0]
-                last_results = results
-            except Exception as e:
-                logging.error(f"Ошибка YOLO ({system.location_id}): {e}")
+        results = None
+        if model is not None:
+            if frame_count % PROCESS_EVERY_N_FRAMES == 0:
+                try:
+                    results = model(
+                        frame,
+                        verbose=False,
+                        conf=0.25,
+                        iou=0.45,
+                        imgsz=640,
+                        half=False,
+                        device="cpu",
+                    )[0]
+                    last_results = results
+                except Exception as e:
+                    logging.error(f"YOLO error ({system.location_id}): {e}")
+                    results = last_results
+            else:
                 results = last_results
-        else:
-            results = last_results
 
 
         if results is None:
+            system.current_frame = frame.copy()
+            system.last_update = datetime.now().isoformat()
             time.sleep(0.01)
             continue
 
@@ -524,17 +514,33 @@ def process_video(system: ParkingSystem):
         det_boxes = results.boxes
 
 
-        # learning
+        # Learning phase (Technopark)
         if system.learning_phase:
             system.process_learning_frame(det_boxes)
-            progress = int((system.learning_frames / AUTO_LEARNING_FRAMES) * 100)
-            cv2.putText(frame, f"ОБУЧЕНИЕ: {progress}%", (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 255, 255), 3)
+
+
+            progress = int((system.learning_frames / max(1, AUTO_LEARNING_FRAMES)) * 100)
+            cv2.putText(frame, f"LEARNING: {progress}%", (20, 50),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 255), 3)
+
+
+            for box in det_boxes:
+                try:
+                    cls = int(box.cls[0])
+                    if cls in CAR_CLASSES:
+                        x1, y1, x2, y2 = map(int, box.xyxy[0])
+                        cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 0), 2)
+                except Exception:
+                    pass
+
+
             system.current_frame = frame.copy()
+            system.last_update = datetime.now().isoformat()
             time.sleep(0.01)
             continue
 
 
-        # normal
+        # Normal mode
         system.detected_cars = []
         free = 0
         total_spots = len(system.parking_spots)
@@ -543,8 +549,6 @@ def process_video(system: ParkingSystem):
         for i, spot in enumerate(system.parking_spots):
             occupied = system.check_spot_occupancy(spot, det_boxes)
             system.parking_spots[i]["occupied"] = occupied
-
-
             if not occupied:
                 free += 1
 
@@ -557,7 +561,8 @@ def process_video(system: ParkingSystem):
 
             text_x = int(coords[0][0])
             text_y = int(coords[0][1]) - 5
-            cv2.putText(frame, f"{i+1}", (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+            cv2.putText(frame, f"{i + 1}", (text_x, text_y),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
 
         for box in det_boxes:
@@ -567,180 +572,210 @@ def process_video(system: ParkingSystem):
                     x1, y1, x2, y2 = map(int, box.xyxy[0])
                     conf = float(box.conf[0])
                     cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 0), 2)
-                    system.detected_cars.append({"bbox": [x1, y1, x2, y2], "conf": conf, "class": results.names[cls]})
+                    label = f"{results.names[cls]} {conf:.2f}"
+                    cv2.putText(frame, label, (x1, y1 - 5),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 0, 0), 1)
+
+
+                    system.detected_cars.append({
+                        "bbox": [x1, y1, x2, y2],
+                        "conf": conf,
+                        "class": results.names[cls],
+                    })
             except Exception:
                 pass
 
 
-        cv2.putText(frame, f"СВОБОДНО: {free}/{total_spots}", (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.4, (0, 255, 0), 3)
+        cv2.putText(frame, f"FREE: {free}/{total_spots}", (20, 50),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 3)
 
 
         system.free_count = free
         system.current_frame = frame.copy()
         system.last_update = datetime.now().isoformat()
+
+
         time.sleep(0.01)
 
 
     cap.release()
-    logging.info(f"✓ ({system.location_id}) Источник отключен")
+    logging.info(f"✓ ({system.location_id}) stopped")
 
 
 
 
 # ---------------------------------------------------------
-# 7. START SYSTEMS (IMPORTANT FOR GUNICORN)
+# 7) INIT SYSTEMS (IMPORTANT FOR GUNICORN!)
 # ---------------------------------------------------------
-def ensure_systems_started():
-    global _systems_started
-    if _systems_started:
-        return
+def start_background_workers():
+    global _initialized
 
 
-    with _systems_lock:
-        if _systems_started:
+    with _init_lock:
+        if _initialized:
             return
 
 
-        logging.info("🚀 Starting Parking Analyzer systems...")
+        logging.info("🚀 Initializing parking systems...")
 
 
-        # Ala-Too
-        ala_too_system = ParkingSystem(location_id="ala-too", source=ALA_TOO_SOURCE, auto_learn=False)
-        ala_too_system.is_running = True
-        parking_systems["ala-too"] = ala_too_system
-        threading.Thread(target=process_video, args=(ala_too_system,), daemon=True).start()
+        # Ala-Too (stream)
+        ala_too_source = "https://webcam.elcat.kg/Bishkek_Ala-Too_Square/tracks-v1/mono.m3u8"
+        ala = ParkingSystem(location_id="ala-too", source=ala_too_source, auto_learn=False)
+        ala.is_running = True
+        parking_systems["ala-too"] = ala
 
 
-        # Technopark (optional)
-        if os.path.exists(TECHNOPARK_VIDEO_PATH):
-            technopark_system = ParkingSystem(location_id="technopark", source=TECHNOPARK_VIDEO_PATH, auto_learn=True)
-            technopark_system.is_running = True
-            parking_systems["technopark"] = technopark_system
-            threading.Thread(target=process_video, args=(technopark_system,), daemon=True).start()
-            logging.info("✓ Технопарк: режим авто-обучения активирован")
+        t1 = threading.Thread(target=process_video, args=(ala,), daemon=True)
+        t1.start()
+
+
+        # Technopark (file inside repo)
+        tech = ParkingSystem(location_id="technopark", source=TECHNOPARK_VIDEO_RELATIVE, auto_learn=True)
+        tech.is_running = True
+        parking_systems["technopark"] = tech
+
+
+        # if file missing -> thread will mark failed, but system exists and API won't crash
+        abs_path = os.path.join(BASE_DIR, TECHNOPARK_VIDEO_RELATIVE)
+        if not os.path.exists(abs_path):
+            logging.warning(f"⚠ Technopark video not found at: {abs_path}")
+            tech.connection_status = "Video file missing"
+            tech.is_running = False
         else:
-            logging.warning(f"⚠ Видео Технопарка не найдено: {TECHNOPARK_VIDEO_PATH}")
+            t2 = threading.Thread(target=process_video, args=(tech,), daemon=True)
+            t2.start()
 
 
-        logging.info("✓ Активные локации: " + ", ".join(parking_systems.keys()))
-        _systems_started = True
+        logging.info("✓ Active locations: " + ", ".join(parking_systems.keys()))
+        _initialized = True
 
 
 
 
-# Важно: при gunicorn модуль импортируется → запускаем системы сразу
-ensure_systems_started()
+@app.before_request
+def _ensure_started():
+    # start threads at first request under gunicorn
+    start_background_workers()
+
+
 
 
 # ---------------------------------------------------------
-# 8. ROUTES
+# 8) ROUTES
 # ---------------------------------------------------------
 @app.route("/")
 def index():
-    # Отдаём index.html из корня проекта
-    if os.path.exists("index.html"):
-        return send_from_directory(".", "index.html")
-    return "<h1>Parking Analyzer Backend</h1>"
+    # Works if index.html is in templates/index.html OR in same folder as app.py
+    try:
+        return render_template("index.html")
+    except Exception:
+        # fallback: serve ./index.html if not using templates folder
+        try:
+            return send_from_directory(BASE_DIR, "index.html")
+        except Exception:
+            return "<h1>Parking Analyzer Backend</h1>", 200
 
 
 
 
 @app.route("/api/auth", methods=["POST"])
 def auth():
-    try:
-        data = request.json or {}
-        username = data.get("username", "").strip()
-        if len(username) < 2:
-            return jsonify({"error": "Имя должно быть минимум 2 символа"}), 400
-        return jsonify(
-            {
-                "success": True,
-                "message": f"Добро пожаловать, {username}! 👋",
-                "user": username,
-                "timestamp": datetime.now().isoformat(),
-            }
-        )
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    data = request.json or {}
+    username = (data.get("username") or "").strip()
+    if len(username) < 2:
+        return jsonify({"error": "Name must be at least 2 characters"}), 400
+    return jsonify({
+        "success": True,
+        "message": f"Welcome, {username}!",
+        "user": username,
+        "timestamp": datetime.now().isoformat(),
+    })
 
 
 
 
 @app.route("/api/status")
 def get_status():
-    system, err = safe_get_system()
-    if err:
-        return jsonify({"error": err}), 503
+    try:
+        system = get_system_from_request()
+        total_spots = len(system.parking_spots)
+        occ = max(0, total_spots - int(system.free_count))
+        occupancy_rate = round((occ / total_spots * 100), 1) if total_spots > 0 else 0.0
 
 
-    total_spots = len(system.parking_spots)
-    occ = total_spots - system.free_count
-    occupancy_rate = round((occ / total_spots * 100), 1) if total_spots > 0 else 0.0
-
-
-    return jsonify(
-        {
+        return jsonify({
             "location": system.location_id,
             "is_running": system.is_running,
             "learning_phase": system.learning_phase,
-            "free_spots": system.free_count,
-            "total_spots": total_spots,
-            "spots_status": [{"id": s["id"], "occupied": s["occupied"]} for s in system.parking_spots],
-            "detected_cars_count": len(system.detected_cars),
+            "free_spots": int(system.free_count),
+            "total_spots": int(total_spots),
+            "spots_status": [{"id": s["id"], "occupied": bool(s["occupied"])} for s in system.parking_spots],
+            "detected_cars_count": int(len(system.detected_cars)),
             "detected_cars": system.detected_cars,
             "last_update": system.last_update,
             "occupancy_rate": occupancy_rate,
             "connection_status": system.connection_status,
-        }
-    )
+            "model_version": "YOLO v11",
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 
 
 @app.route("/api/video-feed")
 def video_feed():
-    system, err = safe_get_system()
-    if err:
-        return jsonify({"error": err}), 503
+    try:
+        system = get_system_from_request()
 
 
-    if system.current_frame is None:
-        # чтобы фронт не падал
-        return jsonify(
-            {
+        if system.current_frame is None:
+            # do not crash, return clear reason
+            return jsonify({
                 "success": False,
-                "frame": None,
+                "error": "No frame yet",
                 "connection_status": system.connection_status,
                 "location": system.location_id,
-                "error": "no_frame",
-            }
-        ), 200
+            }), 200
 
 
-    ret, buffer = cv2.imencode(".jpg", system.current_frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
-    if not ret:
-        return jsonify({"error": "encode_failed"}), 500
+        ret, buffer = cv2.imencode(".jpg", system.current_frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
+        if not ret:
+            return jsonify({"success": False, "error": "Encoding error"}), 500
 
 
-    frame_b64 = base64.b64encode(buffer).decode()
-    return jsonify(
-        {
+        frame_b64 = base64.b64encode(buffer).decode("utf-8")
+        return jsonify({
             "success": True,
             "frame": f"data:image/jpeg;base64,{frame_b64}",
             "connection_status": system.connection_status,
             "location": system.location_id,
-        }
-    )
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
+
+@app.route("/health")
+def health():
+    return jsonify({
+        "ok": True,
+        "initialized": _initialized,
+        "locations": list(parking_systems.keys()),
+        "time": datetime.now().isoformat()
+    })
 
 
 
 
 # ---------------------------------------------------------
-# 9. LOCAL RUN
+# 9) LOCAL RUN (not used by Render gunicorn)
 # ---------------------------------------------------------
 if __name__ == "__main__":
-    # локально можно так, на Render это не используется (gunicorn)
-    port = int(os.getenv("PORT", "5000"))
+    start_background_workers()
+    port = int(os.environ.get("PORT", "5000"))
     app.run(host="0.0.0.0", port=port, debug=False)
 
 
