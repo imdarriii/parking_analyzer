@@ -235,8 +235,6 @@ FPS: 10-15
 🔗 Ссылки
 GitHub репозиторий: https://github.com/imdarriii/parking_analyzer.git
 
-Локальный адрес: https://cathedral-worth-doubt-electronics.trycloudflare.com/ 
-
 🎓 Образовательный проект
 Демонстрирует:
 
